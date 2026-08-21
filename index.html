@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Czat AI Studio</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 75%; word-wrap: break-word; }
+        .user { background-color: #007acc; align-self: flex-end; }
+        .ai { background-color: #2a2a2a; align-self: flex-start; }
+        #input-area { padding: 15px; background-color: #1e1e1e; display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border: none; border-radius: 20px; background-color: #333; color: white; font-size: 16px; }
+        button { background-color: #007acc; color: white; border: none; padding: 0 20px; border-radius: 20px; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+
+    <div id="chat">
+        <div class="msg ai">🤖 Cześć! W czym mogę Ci dzisiaj pomóc?</div>
+    </div>
+
+
+    <div id="input-area">
+        <input type="text" id="msgInput" placeholder="Napisz wiadomość...">
+        <button onclick="sendMsg()">Wyślij</button>
+    </div>
+
+
+    <script>
+        // 🌐 TUTAJ WKLEJ DOKŁADNY ADRES SWOJEGO SERWERA Z RENDERA:
+        const SERVER_URL = "https://onrender.com";
+
+
+        async function sendMsg() {
+            const input = document.getElementById('msgInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+
+            const chat = document.getElementById('chat');
+            
+            // 1. Dodaj wiadomość użytkownika do ekranu
+            chat.innerHTML += `<div class="msg user">${text}</div>`;
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+
+            // 2. Dodaj animację ładowania bota
+            const loadingId = 'load-' + Date.now();
+            chat.innerHTML += `<div class="msg ai" id="${loadingId}">🤖 Myślę...</div>`;
+            chat.scrollTop = chat.scrollHeight;
+
+
+            try {
+                // 3. Wyślij zapytanie do Twojego serwera proxy
+                const response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text })
+                });
+
+
+                const data = await response.json();
+                document.getElementById(loadingId).innerText = "🤖 " + (data.response || "Błąd odpowiedzi.");
+            } catch (error) {
+                document.getElementById(loadingId).innerText = "❌ Brak połączenia z serwerem.";
+            }
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+
+        // Obsługa wysyłania enterem
+        document.getElementById('msgInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMsg();
+        });
+    </script>
+</body>
+</html>
